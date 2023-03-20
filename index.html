@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Space Impact</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="gameCanvas" width="800" height="400"></canvas>
+  <div id="score" style="position: absolute; top: 10px; left: 10px; color: white; font-size: 18px;">Score: 0</div>
+  <div id="health" style="position: absolute; top: 10px; left: 100px; color: white; font-size: 18px;">Health: 100</div>
+  <div id="gameOver" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 24px; display: none;">Game Over</div>
+  <button id="restart" style="position: absolute; top: 10px; left: 200px; color: white; font-size: 18px; background: none; border: none;">Restart</button>
+
+
+  <script src="game.js"></script>
+</body>
+</html>
