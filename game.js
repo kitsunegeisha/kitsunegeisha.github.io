@@ -120,7 +120,13 @@ function updateHealth() {
 
 function gameOver() {
     //gameRunning = false; // Stop the game loop
-    document.getElementById('gameOver').style.display = 'block'; // Show the game over message
+    //document.getElementById('gameOver').style.display = 'block'; // Show the game over message
+    ctx.fillStyle = "#a20001";
+    ctx.font = "100px Roboto";
+    ctx.fillText("Game Over!", 140, 300);
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "#ff0d00";
+    ctx.strokeText("Game Over!", 140, 300);
 }
   
 function spawnEnemy() {
