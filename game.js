@@ -47,6 +47,7 @@ class Enemy {
         this.shootCounter = 0;
         this.image = new Image();
         this.image.src = "Sprites/enemy_white2.png"; // Set the image source
+        this.level = 1; // Add a level property
     }
 
     draw() {
@@ -56,21 +57,45 @@ class Enemy {
     update() {
         this.x -= this.speed;
         this.shootCounter++;
-        if (this.shootCounter > this.shootCooldown) {
-        this.shoot();
-        this.shootCounter = 0;
+        if (this.shootCounter > this.shootCooldown / this.level) { // Adjust the shootCooldown based on level
+            this.shoot();
+            this.shootCounter = 0;
+        }
+        if (score >= this.level * 1000) { // Increase the level based on the score
+            this.level++;
+            this.speed++;
         }
     }
 
     shoot() {
-        if (score >= 600) {
-            const bulletX = this.x - 5;
-            const bulletY = this.y + this.height / 2;
-            const bullet = new Bullet(bulletX, bulletY);
-            bullet.speed = -3;
-            bullets.push(bullet);
+        // if (score >= 600) {
+        //     const bulletX = this.x - 5;
+        //     const bulletY = this.y + this.height / 2;
+        //     const bullet = new Bullet(bulletX, bulletY);
+        //     bullet.speed = -3;
+        //     bullets.push(bullet);
+        // }
+        const bulletX = this.x - 5;
+        const bulletY = this.y + this.height / 2;
+        const bullet = new Bullet(bulletX, bulletY);
+        bullet.speed = -(3 + this.level); // Increase the speed of the bullets based on level
+        bullets.push(bullet);
+
+        if (this.level >= 2) { // Fire more bullets at higher levels
+            const bulletX2 = this.x - 5;
+            const bulletY2 = this.y + this.height / 2 - 5;
+            const bullet2 = new Bullet(bulletX2, bulletY2);
+            bullet2.speed = -(3 + this.level);
+            bullets.push(bullet2);
+
+            const bulletX3 = this.x - 5;
+            const bulletY3 = this.y + this.height / 2 + 5;
+            const bullet3 = new Bullet(bulletX3, bulletY3);
+            bullet3.speed = -(3 + this.level);
+            bullets.push(bullet3);
         }
     }
+    
 }
 
 let score = 0;
@@ -109,6 +134,7 @@ function gameOver() {
 function spawnEnemy() {
     const enemyY = Math.random() * (canvas.height - 20);
     const enemy = new Enemy(canvas.width, enemyY);
+    enemy.level = Math.floor(score / 1000) + 1; // Set the initial level of the enemy
     enemies.push(enemy);
   
     setTimeout(spawnEnemy, 2000);
