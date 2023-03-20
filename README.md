@@ -1,6 +1,6 @@
 # Space Impact clone
 
-This is a Space Impact clone I wrote for a university course.
+This is a Space Impact clone I wrote using HTML.
 
 It doesn't use any lib, it's written in JavaScript and HTML.
 
