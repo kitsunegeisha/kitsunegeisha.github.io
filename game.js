@@ -27,6 +27,8 @@ class SpaceShip {
     this.health = 100; // Add health to the SpaceShip class
     this.image = new Image();
     this.image.src = "Sprites/ship_blue.png"; // Set the image source
+    this.bulletType = 'normal'; // Add the bulletType property
+    
   }
 
   draw() {
@@ -51,6 +53,22 @@ class Bullet {
   update() {
     this.x += this.speed;
   }
+}
+
+class SpecialBullet extends Bullet {
+  constructor(x, y) {
+    super(x, y);
+    this.width = 5;
+    this.height = 5;
+    this.color = 'red';
+  }
+
+  draw() {
+    ctx.fillStyle = this.color;
+    ctx.fillRect(this.x, this.y, this.width, this.height);
+  }
+
+  // Add any additional behavior for special bullets here
 }
 
 class Enemy {
@@ -142,6 +160,9 @@ class PowerUp {
       case 'health':
         this.image.src = "Sprites/ship_pink.png";
         break;
+      case 'changeBullet':
+      this.image.src = "Sprites/ship_yellow.png";
+      break;
       // Add other power-up types here
     }
   }
@@ -225,7 +246,8 @@ const powerUps = [];
 
 function spawnPowerUp() {
   const powerUpY = Math.random() * (canvas.height - 20);
-  const powerUpType = 'health'; // You can add more power-up types and use random selection
+  const powerUpTypes = ['health', 'changeBullet']; // Add the new power-up type to the array
+  const powerUpType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
   const powerUp = new PowerUp(canvas.width, powerUpY, powerUpType);
   powerUps.push(powerUp);
 
@@ -343,6 +365,9 @@ enemies.forEach((enemy, index) => {
           spaceShip.health = Math.min(spaceShip.health + 20, 100);
           updateHealth();
           break;
+        case 'changeBullet':
+          spaceShip.bulletType = 'special'; // Change the bullet type
+          break;
         // Add other power-up effects here
       }
 
@@ -385,9 +410,26 @@ canvas.addEventListener('mousemove', (event) => {
   
 
 canvas.addEventListener('click', () => {
-  // Create a new bullet and add it to the bullets array
-  const bulletX = spaceShip.x + spaceShip.width;
-  const bulletY = spaceShip.y + spaceShip.height / 2;
-  const bullet = new Bullet(bulletX, bulletY);
-  bullets.push(bullet);
+ // Create a new bullet and add it to the bullets array
+ const bulletX = spaceShip.x + spaceShip.width;
+ const bulletY = spaceShip.y + spaceShip.height / 2;
+ let bullet;
+
+ switch (spaceShip.bulletType) {
+   case 'normal':
+     bullet = new Bullet(bulletX, bulletY);
+     bullets.push(bullet);
+     break;
+   case 'special':
+     bullet = new SpecialBullet(bulletX, bulletY); // Create a new SpecialBullet class
+     bullets.push(bullet);
+     // Create two more bullets and add them to the bullets array
+     const bullet2 = new SpecialBullet(bulletX, bulletY - 10);
+     const bullet3 = new SpecialBullet(bulletX, bulletY + 10);
+     bullets.push(bullet2);
+     bullets.push(bullet3);
+     break;
+ }
+
+ bullets.push(bullet);
 });
