@@ -3,8 +3,18 @@ const ctx = canvas.getContext('2d');
 const backgroundImage = new Image();
 backgroundImage.src = "Sprites/star.png";
 
+let backgroundX = 0;
+let backgroundSpeed = 1;
+
 function drawBackground() {
   ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+  ctx.drawImage(backgroundImage, backgroundX, 0, canvas.width, canvas.height);
+  ctx.drawImage(backgroundImage, backgroundX + canvas.width, 0, canvas.width, canvas.height);
+
+  backgroundX -= backgroundSpeed;
+  if (backgroundX <= -canvas.width) {
+    backgroundX = 0;
+  }
 }
 
 
@@ -97,40 +107,57 @@ class Enemy {
     }
 }
 
+class FastEnemy extends Enemy {
+  constructor(x, y) {
+    super(x, y);
+    this.width = 20;
+    this.height = 20;
+    this.speed = 3;
+    this.health = 50;
+    this.image.src = "Sprites/swoop02.png";
+  }
+}
+
+class TankEnemy extends Enemy {
+  constructor(x, y) {
+    super(x, y);
+    this.width = 30;
+    this.height = 30;
+    this.speed = 0.5;
+    this.health = 200;
+    this.image.src = "Sprites/swoop01.png";
+  }
+}
+
 class PowerUp {
   constructor(x, y, type) {
     this.x = x;
     this.y = y;
-    this.width = 10;
-    this.height = 10;
+    this.width = 20;
+    this.height = 20;
     this.type = type;
-    this.speed = 1;
+    this.image = new Image();
+
+    switch (type) {
+      case 'health':
+        this.image.src = "Sprites/ship_pink.png";
+        break;
+      // Add other power-up types here
+    }
   }
 
   draw() {
-    ctx.fillStyle = this.type === 'shield' ? 'cyan' : this.type === 'doubleFire' ? 'green' : 'purple';
-    ctx.fillRect(this.x, this.y, this.width, this.height);
+    ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
   }
 
   update() {
-    this.x -= this.speed;
+    this.x -= 1;
   }
 }
 
 
-
 let score = 0;
 //let gameRunning = true; // Add a variable to control the game loop
-const powerUps = [];
-let shieldActive = false;
-let shieldCounter = 0;
-let shieldDuration = 300;
-let doubleFireActive = false;
-let doubleFireCounter = 0;
-let doubleFireDuration = 300;
-let alternativeFireActive = false;
-let alternativeFireCounter = 0;
-let alternativeFireDuration = 300;
 
 const spaceShip = new SpaceShip();
 const bullets = [];
@@ -169,26 +196,45 @@ function gameOver() {
 }
   
 function spawnEnemy() {
-    const enemyY = Math.random() * (canvas.height - 20);
-    const enemy = new Enemy(canvas.width, enemyY);
-    enemy.level = Math.floor(score / 1000) + 1; // Set the initial level of the enemy
-    enemies.push(enemy);
-  
-    setTimeout(spawnEnemy, 2000);
+  const enemyY = Math.random() * (canvas.height - 20);
+  const enemyType = Math.floor(Math.random() * 3);
+  let enemy;
+
+  switch (enemyType) {
+    case 0:
+      enemy = new Enemy(canvas.width, enemyY);
+      break;
+    case 1:
+      enemy = new FastEnemy(canvas.width, enemyY);
+      break;
+    case 2:
+      enemy = new TankEnemy(canvas.width, enemyY);
+      break;
+  }
+
+  enemy.level = Math.floor(score / 1000) + 1;
+  enemies.push(enemy);
+
+  setTimeout(spawnEnemy, 2000);
   }
   
 spawnEnemy();
 
+
+const powerUps = [];
+
 function spawnPowerUp() {
-  const powerUpY = Math.random() * (canvas.height - 10);
-  const powerUpType = ['shield', 'doubleFire', 'alternativeFire'][Math.floor(Math.random() * 3)];
+  const powerUpY = Math.random() * (canvas.height - 20);
+  const powerUpType = 'health'; // You can add more power-up types and use random selection
   const powerUp = new PowerUp(canvas.width, powerUpY, powerUpType);
   powerUps.push(powerUp);
 
+  // Spawn power-ups at random intervals between 5 and 15 seconds
   setTimeout(spawnPowerUp, Math.random() * 10000 + 5000);
 }
 
 spawnPowerUp();
+
 
 // Helper function to check for collisions between two rectangles
 function checkCollision(rect1, rect2) {
@@ -248,61 +294,67 @@ bullets.forEach((bullet, bulletIndex) => {
     if (bullet.x > canvas.width || bullet.x < 0) {
     bullets.splice(bulletIndex, 1);
     }
-
-    powerUps.forEach((powerUp, powerUpIndex) => {
-      powerUp.update();
-      powerUp.draw();
-  
-      if (checkCollision(powerUp, spaceShip)) {
-        if (powerUp.type === 'shield') {
-          shieldActive = true;
-          shieldCounter = 0;
-        }else if (powerUp.type === 'doubleFire') {
-          doubleFireActive = true;
-          doubleFireCounter = 0;
-        } else if (powerUp.type === 'alternativeFire') {
-          alternativeFireActive = true;
-          alternativeFireCounter = 0;
-        }
-  
-        powerUps.splice(powerUpIndex, 1);
-      }
-  
-      if (powerUp.x < 0) {
-        powerUps.splice(powerUpIndex, 1);
-      }
-    });
-  
-    if (shieldActive) {
-      shieldCounter++;
-  
-      if (doubleFireActive) {
-        doubleFireCounter++;
-    
-        if (doubleFireCounter > doubleFireDuration) {
-          doubleFireActive = false;
-        }
-      }
-      if (alternativeFireActive) {
-        alternativeFireCounter++;
-    
-        if (alternativeFireCounter > alternativeFireDuration) {
-          alternativeFireActive = false;
-        }
-      }
-    }
-
 });
+
+// enemies.forEach((enemy, index) => {
+//     enemy.update();
+//     enemy.draw();
+
+//     // Remove enemies that are off the canvas
+//     if (enemy.x < 0) {
+//     enemies.splice(index, 1);
+//     }
+// });
 
 enemies.forEach((enemy, index) => {
-    enemy.update();
-    enemy.draw();
+  enemy.update();
+  enemy.draw();
 
-    // Remove enemies that are off the canvas
-    if (enemy.x < 0) {
+  // Check for collision between spaceship and enemy
+  if (checkCollision(spaceShip, enemy)) {
+    // Decrease spaceship health
+    spaceShip.health -= 20;
+    updateHealth();
+
+    // Remove the enemy after the collision
     enemies.splice(index, 1);
+
+    // Check if the spaceship's health is depleted, and end the game if it is
+    if (spaceShip.health <= 0) {
+      gameOver();
     }
+  }
+
+  // Remove enemies that are off the canvas
+  if (enemy.x < 0) {
+    enemies.splice(index, 1);
+  }
 });
+
+  // ...
+  powerUps.forEach((powerUp, index) => {
+    powerUp.update();
+    powerUp.draw();
+
+    // Check for collision with the spaceship
+    if (checkCollision(powerUp, spaceShip)) {
+      switch (powerUp.type) {
+        case 'health':
+          spaceShip.health = Math.min(spaceShip.health + 20, 100);
+          updateHealth();
+          break;
+        // Add other power-up effects here
+      }
+
+      // Remove the power-up after it's collected
+      powerUps.splice(index, 1);
+    }
+
+    // Remove power-ups that are off the canvas
+    if (powerUp.x < 0) {
+      powerUps.splice(index, 1);
+    }
+  });
 
 requestAnimationFrame(gameLoop);
 }
