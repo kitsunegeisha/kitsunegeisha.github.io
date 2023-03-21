@@ -1,5 +1,12 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
+const backgroundImage = new Image();
+backgroundImage.src = "Sprites/star.png";
+
+function drawBackground() {
+  ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+}
+
 
 class SpaceShip {
   constructor() {
@@ -90,8 +97,40 @@ class Enemy {
     }
 }
 
+class PowerUp {
+  constructor(x, y, type) {
+    this.x = x;
+    this.y = y;
+    this.width = 10;
+    this.height = 10;
+    this.type = type;
+    this.speed = 1;
+  }
+
+  draw() {
+    ctx.fillStyle = this.type === 'shield' ? 'cyan' : this.type === 'doubleFire' ? 'green' : 'purple';
+    ctx.fillRect(this.x, this.y, this.width, this.height);
+  }
+
+  update() {
+    this.x -= this.speed;
+  }
+}
+
+
+
 let score = 0;
 //let gameRunning = true; // Add a variable to control the game loop
+const powerUps = [];
+let shieldActive = false;
+let shieldCounter = 0;
+let shieldDuration = 300;
+let doubleFireActive = false;
+let doubleFireCounter = 0;
+let doubleFireDuration = 300;
+let alternativeFireActive = false;
+let alternativeFireCounter = 0;
+let alternativeFireDuration = 300;
 
 const spaceShip = new SpaceShip();
 const bullets = [];
@@ -120,7 +159,7 @@ function updateHealth() {
 
 function gameOver() {
     //gameRunning = false; // Stop the game loop
-    //document.getElementById('gameOver').style.display = 'block'; // Show the game over message
+    document.getElementById('gameOver').style.display = 'block'; // Show the game over message
     ctx.fillStyle = "#a20001";
     ctx.font = "100px Roboto";
     ctx.fillText("Game Over!", 140, 300);
@@ -140,6 +179,17 @@ function spawnEnemy() {
   
 spawnEnemy();
 
+function spawnPowerUp() {
+  const powerUpY = Math.random() * (canvas.height - 10);
+  const powerUpType = ['shield', 'doubleFire', 'alternativeFire'][Math.floor(Math.random() * 3)];
+  const powerUp = new PowerUp(canvas.width, powerUpY, powerUpType);
+  powerUps.push(powerUp);
+
+  setTimeout(spawnPowerUp, Math.random() * 10000 + 5000);
+}
+
+spawnPowerUp();
+
 // Helper function to check for collisions between two rectangles
 function checkCollision(rect1, rect2) {
     return (
@@ -151,9 +201,11 @@ function checkCollision(rect1, rect2) {
   }
 
 function gameLoop() {
+  // Draw the background first
+  drawBackground();
  
 
-ctx.clearRect(0, 0, canvas.width, canvas.height);
+//ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 spaceShip.draw();
 
@@ -196,6 +248,50 @@ bullets.forEach((bullet, bulletIndex) => {
     if (bullet.x > canvas.width || bullet.x < 0) {
     bullets.splice(bulletIndex, 1);
     }
+
+    powerUps.forEach((powerUp, powerUpIndex) => {
+      powerUp.update();
+      powerUp.draw();
+  
+      if (checkCollision(powerUp, spaceShip)) {
+        if (powerUp.type === 'shield') {
+          shieldActive = true;
+          shieldCounter = 0;
+        }else if (powerUp.type === 'doubleFire') {
+          doubleFireActive = true;
+          doubleFireCounter = 0;
+        } else if (powerUp.type === 'alternativeFire') {
+          alternativeFireActive = true;
+          alternativeFireCounter = 0;
+        }
+  
+        powerUps.splice(powerUpIndex, 1);
+      }
+  
+      if (powerUp.x < 0) {
+        powerUps.splice(powerUpIndex, 1);
+      }
+    });
+  
+    if (shieldActive) {
+      shieldCounter++;
+  
+      if (doubleFireActive) {
+        doubleFireCounter++;
+    
+        if (doubleFireCounter > doubleFireDuration) {
+          doubleFireActive = false;
+        }
+      }
+      if (alternativeFireActive) {
+        alternativeFireCounter++;
+    
+        if (alternativeFireCounter > alternativeFireDuration) {
+          alternativeFireActive = false;
+        }
+      }
+    }
+
 });
 
 enemies.forEach((enemy, index) => {
@@ -212,7 +308,12 @@ requestAnimationFrame(gameLoop);
 }
 
 
-gameLoop();
+//gameLoop();
+backgroundImage.addEventListener('error', function (event) {
+  console.error('Error loading the background image:', event);
+});
+backgroundImage.addEventListener('load', gameLoop);
+
 
 document.getElementById('restart').addEventListener('click', restartGame);
 canvas.addEventListener('mousemove', (event) => {
